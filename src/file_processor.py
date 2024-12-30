@@ -1,56 +1,13 @@
 from pathlib import Path
-import json
 import logging
 from typing import List, Dict
+from config_manager import ConfigManager
 
 class FileProcessor:
-    DEFAULT_CONFIG = {
-        'max_file_size_kb': 1024,
-        'exclude': {
-            'extensions': [],
-            'files': [],
-        },
-        'exclude_structure': {
-            'extensions': [],
-            'directories': [],
-            'files': []
-        }
-    }
-
-    def __init__(self, config_path: str = "config.json"):
+    def __init__(self):
         """Initializes the processor with the configuration"""
-        self.config = self._load_config(config_path)
         self._setup_logging()
-
-    def _load_config(self, config_path: str) -> dict:
-        """Loads the configuration from the json file with default values"""
-        try:
-            with open(config_path, 'r') as f:
-                user_config = json.load(f) or {}
-            
-            # Deep merge of user configuration with defaults
-            config = self.DEFAULT_CONFIG.copy()
-            
-            # Updates max_file_size_kb if specified
-            if 'max_file_size_kb' in user_config:
-                config['max_file_size_kb'] = user_config['max_file_size_kb']
-            
-            # Updates exclude if specified
-            if 'exclude' in user_config:
-                for key in ['extensions', 'files']:
-                    if user_config['exclude'] and key in user_config['exclude']:
-                        config['exclude'][key] = user_config['exclude'][key] or []
-            
-            # Updates exclude_structure if specified
-            if 'exclude_structure' in user_config:
-                for key in ['extensions', 'directories', 'files']:
-                    if user_config['exclude_structure'] and key in user_config['exclude_structure']:
-                        config['exclude_structure'][key] = user_config['exclude_structure'][key] or []
-            
-            return config
-        except Exception as e:
-            self.logger.warning(f"Error loading configuration: {str(e)}. Using default configuration.")
-            return self.DEFAULT_CONFIG
+        self.config = ConfigManager().get_config()
 
     def _setup_logging(self):
         """Setup logging base"""

@@ -3,41 +3,13 @@ from typing import List, Dict
 import logging
 from pathlib import Path
 from xml.sax.saxutils import escape
-import json
+from config_manager import ConfigManager
 
 class XMLGenerator:
-    DEFAULT_CONFIG = {
-        'exclude_structure': {
-            'extensions': [],
-            'directories': [],
-            'files': []
-        }
-    }
-
-    def __init__(self, config_path: str = "config.json"):
+    def __init__(self):
         """Initializes the XML generator"""
         self.logger = logging.getLogger(__name__)
-        self.config = self._load_config(config_path)
-
-    def _load_config(self, config_path: str) -> dict:
-        """Loads the configuration from the json file with default values"""
-        try:
-            with open(config_path, 'r') as f:
-                user_config = json.load(f) or {}
-            
-            # Deep merge of user configuration with defaults
-            config = self.DEFAULT_CONFIG.copy()
-            
-            # Updates exclude_structure if specified
-            if 'exclude_structure' in user_config:
-                for key in ['extensions', 'directories', 'files']:
-                    if user_config['exclude_structure'] and key in user_config['exclude_structure']:
-                        config['exclude_structure'][key] = user_config['exclude_structure'][key] or []
-            
-            return config
-        except Exception as e:
-            self.logger.warning(f"Error loading configuration: {str(e)}. Using default configuration.")
-            return self.DEFAULT_CONFIG
+        self.config = ConfigManager().get_config()
 
     def _generate_structure(self, root_path: str) -> List[str]:
         """
@@ -58,8 +30,8 @@ class XMLGenerator:
                 is_last_item = index == len(items) - 1
                 if item.is_dir():
                     if item.name in self.config['exclude_structure']['directories']:
-                         self.logger.debug(f"Ignored directory (structure): {item}")
-                         continue
+                        self.logger.debug(f"Ignored directory (structure): {item}")
+                        continue
                     add_to_structure(item, prefix, is_last_item)
                 else:
                     if (item.name in self.config['exclude_structure']['files'] or 
