@@ -1,0 +1,23 @@
+# Limite dimensione file
+max_file_size_kb: 1024  # Files più grandi di 1MB verranno ignorati
+
+# Esclusioni
+exclude:
+  # Estensioni da ignorare
+  extensions:
+    - .env
+    - .pyc
+    - .log
+    - .git
+    - .gitignore
+
+  # Cartelle da ignorare
+  directories:
+    - __pycache__
+    - .git
+    - venv
+
+  # File specifici da ignorare
+  files:
+    - LICENSE
+    - file_inutile.txt
