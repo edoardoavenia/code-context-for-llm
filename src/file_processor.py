@@ -1,5 +1,5 @@
 from pathlib import Path
-import yaml
+import json
 import logging
 from typing import List, Dict
 
@@ -17,16 +17,16 @@ class FileProcessor:
         }
     }
 
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path: str = "config.json"):
         """Initializes the processor with the configuration"""
         self.config = self._load_config(config_path)
         self._setup_logging()
 
     def _load_config(self, config_path: str) -> dict:
-        """Loads the configuration from the yaml file with default values"""
+        """Loads the configuration from the json file with default values"""
         try:
             with open(config_path, 'r') as f:
-                user_config = yaml.safe_load(f) or {}
+                user_config = json.load(f) or {}
             
             # Deep merge of user configuration with defaults
             config = self.DEFAULT_CONFIG.copy()
