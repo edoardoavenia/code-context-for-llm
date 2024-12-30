@@ -1,32 +1,12 @@
 {
     "max_file_size_kb": 1024,
-    "exclude": {
-        "extensions": [
-            ".env",
-            ".pyc",
-            ".log",
-            ".git",
-            ".gitignore"
-        ],
-        "files": [
-            "LICENSE",
-            "file_inutile.txt"
-        ]
+        "exclude": {
+        "extensions": [".env", ".pyc", ".log"],
+        "files": ["LICENSE", "useless_file.txt"]
     },
     "exclude_structure": {
-        "extensions": [
-            ".pdf",
-            ".png",
-            ".jpg",
-            ".jpeg"
-        ],
-        "directories": [
-            "__pycache__",
-            ".git",
-            "venv"
-        ],
-        "files": [
-            "LICENSE"
-        ]
+        "extensions": [".env", ".pyc", ".log", ".pdf"],
+        "files": ["LICENSE", "useless_file.txt", ".gitignore"],
+        "directories": ["__pycache__", ".git", "venv"]
     }
 }
