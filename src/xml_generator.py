@@ -15,20 +15,20 @@ class XMLGenerator:
     }
 
     def __init__(self, config_path: str = "config.yaml"):
-        """Inizializza il generatore XML"""
+        """Initializes the XML generator"""
         self.logger = logging.getLogger(__name__)
         self.config = self._load_config(config_path)
 
     def _load_config(self, config_path: str) -> dict:
-        """Carica la configurazione dal file yaml con valori di default"""
+        """Loads the configuration from the yaml file with default values"""
         try:
             with open(config_path, 'r') as f:
                 user_config = yaml.safe_load(f) or {}
             
-            # Deep merge della configurazione utente con i default
+            # Deep merge of user configuration with defaults
             config = self.DEFAULT_CONFIG.copy()
             
-            # Aggiorna exclude_structure se specificato
+            # Updates exclude_structure if specified
             if 'exclude_structure' in user_config:
                 for key in ['extensions', 'directories', 'files']:
                     if user_config['exclude_structure'] and key in user_config['exclude_structure']:
@@ -36,12 +36,12 @@ class XMLGenerator:
             
             return config
         except Exception as e:
-            self.logger.warning(f"Errore nel caricamento della configurazione: {str(e)}. Uso configurazione di default.")
+            self.logger.warning(f"Error loading configuration: {str(e)}. Using default configuration.")
             return self.DEFAULT_CONFIG
 
     def _generate_structure(self, root_path: str) -> List[str]:
         """
-        Genera la rappresentazione della struttura delle directory
+        Generates the representation of the directory structure
         """
         root_path = Path(root_path)
         structure_lines = []
@@ -58,13 +58,13 @@ class XMLGenerator:
                 is_last_item = index == len(items) - 1
                 if item.is_dir():
                     if item.name in self.config['exclude_structure']['directories']:
-                         self.logger.debug(f"Directory ignorata (structure): {item}")
+                         self.logger.debug(f"Ignored directory (structure): {item}")
                          continue
                     add_to_structure(item, prefix, is_last_item)
                 else:
                     if (item.name in self.config['exclude_structure']['files'] or 
                         item.suffix in self.config['exclude_structure']['extensions']):
-                        self.logger.debug(f"File ignorato (structure): {item}")
+                        self.logger.debug(f"Ignored file (structure): {item}")
                         continue
                     connector = "└── " if is_last_item else "├── "
                     structure_lines.append(f"{prefix}{connector}{item.name}")
@@ -74,30 +74,30 @@ class XMLGenerator:
 
     def generate_xml(self, root_path: str, files: List[Dict[str, str]]) -> str:
         """
-        Genera il documento XML con struttura e contenuti
+        Generates the XML document with structure and contents
         
         Args:
-            root_path: Percorso root del progetto
-            files: Lista di dict con 'path' e 'content' dei file
+            root_path: Root path of the project
+            files: List of dict with 'path' and 'content' of the files
             
         Returns:
-            str: Documento XML completo
+            str: Complete XML document
         """
-        self.logger.info("Inizio generazione XML")
+        self.logger.info("Starting XML generation")
         
-        # Inizia il documento XML
+        # Start the XML document
         output = ["<code>"]
         
-        # Aggiungi struttura
+        # Add structure
         output.append("<structure>")
         structure = self._generate_structure(root_path)
         output.extend(structure)
         output.append("</structure>\n")
         
-        # Aggiungi contenuti file
+        # Add file contents
         for file_info in files:
             tag_name = file_info['path']
-            content = escape(file_info['content'])  # Escape caratteri XML
+            content = escape(file_info['content'])  # Escape XML characters
             output.append(f"<{tag_name}>")
             output.append(content)
             output.append(f"</{tag_name}>\n")
@@ -105,5 +105,5 @@ class XMLGenerator:
         output.append("</code>")
         xml_content = "\n".join(output)
         
-        self.logger.info("Generazione XML completata")
+        self.logger.info("XML generation completed")
         return xml_content
