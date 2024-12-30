@@ -1,7 +1,6 @@
 from pathlib import Path
 import yaml
 import logging
-import filetype
 from typing import List, Dict
 
 class FileProcessor:
@@ -9,7 +8,7 @@ class FileProcessor:
         """Inizializza il processor con la configurazione"""
         self.config = self._load_config(config_path)
         self._setup_logging()
-        
+
     def _load_config(self, config_path: str) -> dict:
         """Carica la configurazione dal file yaml"""
         try:
@@ -47,22 +46,16 @@ class FileProcessor:
         """Controlla se la directory deve essere ignorata"""
         return dir_path.name in self.config['exclude']['directories']
 
-    def _is_text_file(self, file_path: Path) -> bool:
+    def _is_utf8(self, file_path: Path) -> bool:
         """
-        Determina se un file è un file di testo leggibile (UTF-8).
-        Utilizza filetype per controllare il mime type.
+        Verifica se un file è codificato in UTF-8.
         """
         try:
-            kind = filetype.guess(str(file_path))
-            if kind is None:
-                # filetype non è sicuro quindi controlliamo anche se non ha estensione
-                return file_path.suffix == "" or file_path.suffix in [".py", ".json", ".yaml", ".yml", ".md", ".txt",".log",".ini",".conf",".toml"]
-
-            mime_type = kind.mime
-            return mime_type.startswith('text/') or mime_type in ['application/json', 'application/x-yaml', 'application/x-sh'] #aggiunte mime types comuni
-        except Exception as e:
-            self.logger.debug(f"Errore nel determinare il tipo di file {file_path}: {e}")
-            return False
+            with open(file_path, 'rb') as f:
+                f.read().decode('utf-8')  # Decodifica in UTF-8
+            return True  # È UTF-8 se la decodifica ha successo
+        except UnicodeDecodeError:
+            return False  # Non è UTF-8 se si verifica un errore
 
 
     def scan_directory(self, root_path: str) -> List[Dict[str, str]]:
@@ -88,19 +81,19 @@ class FileProcessor:
                     _scan(item)
                 elif item.is_file():
                     if self._should_ignore_file(item):
-                        self.logger.debug(f"File ignorato (config): {item}")
-                        continue
-                    if not self._is_text_file(item):
-                       self.logger.debug(f"File ignorato (non text): {item}")
+                         self.logger.debug(f"File ignorato (config): {item}")
+                         continue
+                    if not self._is_utf8(item):
+                       self.logger.debug(f"File ignorato (non UTF-8): {item}")
                        continue
 
                     try:
                         with open(item, 'r', encoding='utf-8') as f:
-                           content = f.read()
-                           files_to_process.append({
+                            content = f.read()
+                            files_to_process.append({
                                 'path': str(item.relative_to(root_path)),
                                 'content': content
-                           })
+                            })
                         self.logger.debug(f"File processato: {item}")
                     except Exception as e:
                         self.logger.error(f"Errore nella lettura del file {item}: {str(e)}")
