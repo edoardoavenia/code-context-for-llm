@@ -1,9 +1,9 @@
 # Limite dimensione file
 max_file_size_kb: 1024  # Files più grandi di 1MB verranno ignorati
 
-# Esclusioni
+# Esclusioni per la lettura del contenuto
 exclude:
-  # Estensioni da ignorare
+  # Estensioni da ignorare per la lettura del contenuto
   extensions:
     - .env
     - .pyc
@@ -11,13 +11,24 @@ exclude:
     - .git
     - .gitignore
 
-  # Cartelle da ignorare
+  # File specifici da ignorare per la lettura del contenuto
+  files:
+    - LICENSE
+    - file_inutile.txt
+
+# Esclusioni per la struttura XML
+exclude_structure:
+  # Estensioni da ignorare nella struttura XML
+  extensions:
+    - .pdf
+    - .png
+    - .jpg
+    - .jpeg
+  # Cartelle da ignorare nella struttura XML
   directories:
     - __pycache__
     - .git
     - venv
-
-  # File specifici da ignorare
+  # File specifici da ignorare nella struttura XML
   files:
     - LICENSE
-    - file_inutile.txt

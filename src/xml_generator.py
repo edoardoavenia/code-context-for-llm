@@ -3,11 +3,41 @@ from typing import List, Dict
 import logging
 from pathlib import Path
 from xml.sax.saxutils import escape
+import yaml
 
 class XMLGenerator:
-    def __init__(self):
+    DEFAULT_CONFIG = {
+        'exclude_structure': {
+            'extensions': [],
+            'directories': [],
+            'files': []
+        }
+    }
+
+    def __init__(self, config_path: str = "config.yaml"):
         """Inizializza il generatore XML"""
         self.logger = logging.getLogger(__name__)
+        self.config = self._load_config(config_path)
+
+    def _load_config(self, config_path: str) -> dict:
+        """Carica la configurazione dal file yaml con valori di default"""
+        try:
+            with open(config_path, 'r') as f:
+                user_config = yaml.safe_load(f) or {}
+            
+            # Deep merge della configurazione utente con i default
+            config = self.DEFAULT_CONFIG.copy()
+            
+            # Aggiorna exclude_structure se specificato
+            if 'exclude_structure' in user_config:
+                for key in ['extensions', 'directories', 'files']:
+                    if user_config['exclude_structure'] and key in user_config['exclude_structure']:
+                        config['exclude_structure'][key] = user_config['exclude_structure'][key] or []
+            
+            return config
+        except Exception as e:
+            self.logger.warning(f"Errore nel caricamento della configurazione: {str(e)}. Uso configurazione di default.")
+            return self.DEFAULT_CONFIG
 
     def _generate_structure(self, root_path: str) -> List[str]:
         """
@@ -27,8 +57,15 @@ class XMLGenerator:
             for index, item in enumerate(items):
                 is_last_item = index == len(items) - 1
                 if item.is_dir():
+                    if item.name in self.config['exclude_structure']['directories']:
+                         self.logger.debug(f"Directory ignorata (structure): {item}")
+                         continue
                     add_to_structure(item, prefix, is_last_item)
                 else:
+                    if (item.name in self.config['exclude_structure']['files'] or 
+                        item.suffix in self.config['exclude_structure']['extensions']):
+                        self.logger.debug(f"File ignorato (structure): {item}")
+                        continue
                     connector = "└── " if is_last_item else "├── "
                     structure_lines.append(f"{prefix}{connector}{item.name}")
 
