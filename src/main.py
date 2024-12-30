@@ -14,7 +14,7 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 def save_output(content: str, project_name: str) -> str:
-    """Salva l'output in un file nella cartella output"""
+    """Saves the output to a file in the output folder"""
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
     
@@ -26,38 +26,38 @@ def save_output(content: str, project_name: str) -> str:
     return str(filename)
 
 def main():
-    """Entry point principale"""
+    """Main entry point"""
     logger = setup_logging()
     
-    # Parse argomenti
+    # Parse arguments
     parser = argparse.ArgumentParser(
-        description="Genera rappresentazione XML di un progetto per LLM"
+        description="Generates XML representation of a project for LLM"
     )
     parser.add_argument(
         "path",
-        help="Percorso della directory del progetto"
+        help="Path to the project directory"
     )
     args = parser.parse_args()
     
     try:
-        # Inizializza processor e generator
+        # Initialize processor and generator
         processor = FileProcessor()
         generator = XMLGenerator()
         
-        # Processa i file
-        logger.info(f"Inizio processing del progetto: {args.path}")
+        # Process files
+        logger.info(f"Starting processing of project: {args.path}")
         files = processor.scan_directory(args.path)
         
-        # Genera XML
+        # Generate XML
         xml_content = generator.generate_xml(args.path, files)
         
-        # Salva output
+        # Save output
         project_name = Path(args.path).name
         output_file = save_output(xml_content, project_name)
-        logger.info(f"File salvato correttamente: {output_file}")
+        logger.info(f"File saved successfully: {output_file}")
         
     except Exception as e:
-        logger.error(f"Errore durante l'esecuzione: {str(e)}")
+        logger.error(f"Error during execution: {str(e)}")
         raise
 
 if __name__ == "__main__":
