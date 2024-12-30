@@ -50,17 +50,14 @@ Configure via `config.json`:
 ```json
 {
     "max_file_size_kb": 1024,
-    "exclude": {
-        "content": {
-            "extensions": [".env", ".pyc", ".log"],
-            "files": ["LICENSE", "useless_file.txt"],
-            "directories": ["__pycache__", ".git", "venv"]
-        },
-        "structure": {
-            "extensions": [".env", ".pyc", ".log", ".pdf"],
-            "files": ["LICENSE", "useless_file.txt", ".gitignore"],
-            "directories": ["__pycache__", ".git", "venv"]
-        }
+        "exclude": {
+        "extensions": [".env", ".pyc", ".log"],
+        "files": ["LICENSE", "useless_file.txt"]
+    },
+    "exclude_structure": {
+        "extensions": [".env", ".pyc", ".log", ".pdf"],
+        "files": ["LICENSE", "useless_file.txt", ".gitignore"],
+        "directories": ["__pycache__", ".git", "venv"]
     }
 }
 ```
