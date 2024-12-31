@@ -91,5 +91,6 @@ The generated output is a valid XML document, ensuring consistency and parsabili
 ## Error Handling
 - Invalid UTF-8 files are skipped, and their content is not included.
 - Files exceeding the configured `max_file_size_kb` are skipped.
+- Directory traversal attempts and malicious file paths are blocked.
 - Errors encountered during file reading or XML generation are logged to the console with timestamps.
 ```
