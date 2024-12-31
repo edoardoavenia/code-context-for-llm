@@ -1,0 +1,16 @@
+{
+    "max_file_size_kb": 1024,
+    "exclude": {
+        "extensions": [".env", ".pyc", ".log"],
+        "files": ["LICENSE", "useless_file.txt"],
+        "max_depth": 10,
+        "max_files": 15
+    },
+    "exclude_structure": {
+        "extensions": [".env", ".pyc", ".log", ".pdf"],
+        "files": ["LICENSE", "useless_file.txt", ".gitignore"],
+        "directories": ["__pycache__", ".git", "venv"],
+        "max_depth": 10,
+        "max_files": 50
+    }
+}
