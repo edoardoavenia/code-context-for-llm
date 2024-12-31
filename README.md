@@ -1,4 +1,3 @@
-```markdown
 # XML Project Context Generator
 
 Tool for converting project files and structure into a standardized XML format, designed to provide complete codebase context when working with LLMs. Automatically handles file scanning, content extraction, and structuring into a consistent XML format that LLMs can easily process.
@@ -36,16 +35,14 @@ sample_project/
 │   └── README.md
 └── config.json
 </structure>
-<src_utils_helper.py>
-<![CDATA[
-File content of src/utils/helper.py goes here.
-]]>
-</src_utils_helper.py>
-<src_main.py>
-<![CDATA[
-File content of src/main.py goes here.
-]]>
-</src_main.py>
+<src_utils_helper>
+def helper_function():
+    return "This is a helper function"
+</src_utils_helper>
+<src_main>
+def main():
+    print("Main function")
+</src_main>
 </code>
 ```
 
@@ -85,16 +82,22 @@ The output is structured as a valid XML file, providing a clear and organized re
     *   **`<generation_timestamp>`**: The date and time when the XML was generated (in UTC).
 *   **`<structure_explanation>`**: Provides a description of the `<structure>` section, indicating that it represents the project's directory structure, taking into account the exclusions defined in the configuration file.
 *   **`<structure>`**: Presents the hierarchical directory structure of the project. Directories are indicated with a trailing `/`. The structure reflects the files and directories that were not excluded by the configuration.
-*   **`<[filepath]>`**:  Each file's content is placed within a tag named after its relative path from the project root. For example, the content of `src/utils.py` will be within the `<src_utils.py>` tag.
-    *   **`<![CDATA[ ... ]]>`**:  The content of each file is wrapped in a CDATA section. This ensures that special characters within the file content (like `<`, `>`, and `&`) are treated as literal characters and do not interfere with the XML structure.
+*   **`<[filepath]>`**: Each file's content is placed within a simplified tag derived from its relative path from the project root. For example, the content of `src/utils/helper.py` will be within the `<src_utils_helper>` tag. The content is included directly without any special wrapping or escaping.
 
 ## XML Format and .txt Extension
 
-The generated output is a valid XML document, ensuring consistency and parsability for LLMs. However, for ease of reading and handling, the output file is saved with a `.txt` extension. This allows you to open and inspect the file content easily with standard text editors without them trying to interpret it strictly as an XML file. It's important that the content within the `.txt` file adheres to XML standards for proper interpretation by LLMs.
+The generated output is a simplified XML document, optimized for LLM processing while maintaining structural consistency. The output file is saved with a `.txt` extension for ease of handling and viewing. While the output follows basic XML structure rules (proper tag opening/closing), it prioritizes simplicity and readability over strict XML compliance, making it ideal for LLM consumption.
 
 ## Error Handling
 - Invalid UTF-8 files are skipped, and their content is not included.
 - Files exceeding the configured `max_file_size_kb` are skipped.
 - Directory traversal attempts and malicious file paths are blocked.
 - Errors encountered during file reading or XML generation are logged to the console with timestamps.
-```
+
+## Key Features
+- Simplified XML generation optimized for LLM processing
+- Clean, readable output without unnecessary XML complexities
+- Maintains structural consistency while prioritizing simplicity
+- Automatic file type detection and UTF-8 validation
+- Configurable file and directory exclusions
+- Comprehensive error logging
