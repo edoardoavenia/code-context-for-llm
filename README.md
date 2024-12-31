@@ -22,27 +22,31 @@ python src/main.py /path/to/your/project
 </project_context>
 <structure_explanation>
     This section represents the directory structure of the project.
-        It includes all UTF-8 encoded files that were not excluded based on the
-        configuration file, which allows excluding files by name, extension,
-        or size, and directories by name.
+    It includes all UTF-8 encoded files that were not excluded based on the
+    configuration file, which allows excluding files by name, extension,
+    or size, and directories by name.
 </structure_explanation>
 <structure>
 sample_project/
-├── main.py
-└── src/
-    └── utils.py
+├── src/
+│   ├── utils/
+│   │   └── helper.py
+│   └── main.py
+├── docs/
+│   └── README.md
+└── config.json
 </structure>
-<main.py>
+<src_utils_helper.py>
 <![CDATA[
-File content of main.py goes here.
+File content of src/utils/helper.py goes here.
 ]]>
-</main.py>
-<src_utils.py>
+</src_utils_helper.py>
+<src_main.py>
 <![CDATA[
-File content of src/utils.py goes here.
+File content of src/main.py goes here.
 ]]>
-</src_utils.py>
-</code >
+</src_main.py>
+</code>
 ```
 
 ## Configuration
