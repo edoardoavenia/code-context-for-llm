@@ -16,50 +16,34 @@ class XMLGenerator:
         self.config = ConfigManager().get_config()
 
     def _sanitize_tag_name(self, path: str) -> str:
-        # Replace directory separators and spaces with underscore
         sanitized = path.replace('/', '_').replace('\\', '_').replace(' ', '_')
-        # Remove file extension
         sanitized = Path(sanitized).stem
-        # Ensure valid XML tag name
         if not sanitized or not sanitized[0].isalpha():
             sanitized = 'file_' + sanitized
         return sanitized
 
-    def _generate_structure(self, root_path: str) -> list:
-        root_path = Path(root_path)
-        structure_lines = []
+    def _generate_structure_lines(self, structure, level=0) -> list:
+        lines = []
+        if level == 0:
+            lines.append(f"{structure.name}/")
+            
+        if not structure.children:
+            return lines
 
-        def should_include(item: Path) -> bool:
-            if item.is_dir():
-                return item.name not in self.config['exclude_structure']['directories']
-            return (item.name not in self.config['exclude_structure']['files'] and
-                    item.suffix not in self.config['exclude_structure']['extensions'])
+        # Process children
+        for i, child in enumerate(structure.children):
+            is_last = (i == len(structure.children) - 1)
+            prefix = "│   " * level + ("└── " if is_last else "├── ")
+            suffix = '/' if child.is_dir else ''
+            lines.append(f"{prefix}{child.name}{suffix}")
+            
+            if child.is_dir:
+                child_lines = self._generate_structure_lines(child, level + 1)
+                lines.extend(child_lines)
 
-        def add_to_structure(path: Path, level: int = 0):
-            try:
-                items = sorted(
-                    [item for item in path.iterdir() if should_include(item)],
-                    key=lambda x: (x.is_file(), x.name.lower())
-                )
+        return lines
 
-                if level == 0:
-                    structure_lines.append(f"{path.name}/")
-
-                for i, item in enumerate(items):
-                    is_last = (i == len(items) - 1)
-                    prefix = "│   " * level + ("└── " if is_last else "├── ")
-                    structure_lines.append(f"{prefix}{item.name}{'/' if item.is_dir() else ''}")
-
-                    if item.is_dir():
-                        add_to_structure(item, level + 1)
-
-            except Exception as e:
-                self.logger.error(f"Error processing directory {path}: {str(e)}")
-
-        add_to_structure(root_path)
-        return structure_lines
-
-    def generate_xml(self, root_path: str, files: list) -> str:
+    def generate_xml(self, root_path: str, scan_result) -> str:
         self.logger.info("Starting XML generation")
         try:
             lines = ['<?xml version="1.0" encoding="UTF-8"?>']
@@ -81,11 +65,14 @@ class XMLGenerator:
                 "</structure_explanation>",
                 "<structure>"
             ])
-            lines.extend(self._generate_structure(root_path))
+            
+            # Generate structure using the processed directory structure
+            structure_lines = self._generate_structure_lines(scan_result.structure)
+            lines.extend(structure_lines)
             lines.append("</structure>")
 
-            # File contents
-            for file_info in files:
+            # Process files content
+            for file_info in scan_result.files_content:
                 try:
                     tag_name = self._sanitize_tag_name(file_info['path'])
                     lines.append(f"<{tag_name}>")
