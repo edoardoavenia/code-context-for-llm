@@ -17,10 +17,10 @@ class XMLGenerator:
     XML_VALID_CHARS = re.compile(r'[^\x09\x0A\x0D\x20-\x7E\x85\xA0-\xFF]')
 
     STRUCTURE_EXPLANATION = """
-        This section represents the directory structure of the project.
-        It includes all UTF-8 encoded files that were not excluded based on the
-        configuration file, which allows excluding files by name, extension,
-        or size, and directories by name.
+    This section represents the directory structure of the project.
+    It includes all UTF-8 encoded files that were not excluded based on the
+    configuration file, which allows excluding files by name, extension,
+    or size, and directories by name.
     """
 
     def __init__(self):
@@ -65,47 +65,60 @@ class XMLGenerator:
         """
         Prepares content for XML insertion, using CDATA when necessary
         """
-        # Replace ']]>' with a placeholder to avoid CDATA section closure
-        content = content.replace("]]>", self.CDATA_END_PLACEHOLDER)
-
-        # Escape special characters
-        content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        # Replace '__CDATA_END__' with a placeholder to avoid CDATA section closure
+        content = content.replace("__CDATA_END__", self.CDATA_END_PLACEHOLDER)
+        content = content.replace("]]>", "]]]]><![CDATA[>")
 
         # Wrap content in CDATA section
         return f"<![CDATA[{content}]]>"
 
     def _generate_structure(self, root_path: str) -> List[str]:
-        """Generate directory structure representation"""
+        """Generate directory structure representation using Unicode tree characters"""
         root_path = Path(root_path)
         structure_lines = []
 
-        def add_to_structure(path: Path, prefix: str = "", is_last: bool = True, is_root: bool = False):
-            if not is_root:
-                connector = "└─── " if is_last else "├─── "
-                structure_lines.append(f"{prefix}{connector}{escape(str(path.name))}{'/' if path.is_dir() else ''}")
-                prefix += "    " if is_last else "│   "
+        def should_include(item: Path) -> bool:
+            """Check if item should be included based on configuration"""
+            if item.is_dir():
+                return item.name not in self.config['exclude_structure']['directories']
+            return (item.name not in self.config['exclude_structure']['files'] and
+                    item.suffix not in self.config['exclude_structure']['extensions'])
 
+        def add_to_structure(path: Path, level: int = 0):
             try:
-                items = sorted(list(path.iterdir()), key=lambda x: (x.is_file(), x.name))
+                # Get filtered and sorted items
+                items = [item for item in path.iterdir() if should_include(item)]
+                items.sort(key=lambda x: (x.is_file(), x.name.lower()))
 
-                for index, item in enumerate(items):
-                    is_last_item = index == len(items) - 1
+                if level == 0:
+                    structure_lines.append(f"{path.name}/")
 
-                    if item.is_dir():
-                        if item.name in self.config['exclude_structure']['directories']:
-                            self.logger.debug(f"Ignored directory (structure): {item}")
-                            continue
-                        add_to_structure(item, prefix, is_last_item)
+                for i, item in enumerate(items):
+                    is_last = (i == len(items) - 1)
+                    
+                    # Create prefix based on level and position
+                    prefix = "│   " * level
+                    
+                    # Add item line
+                    if is_last:
+                        line = f"{prefix}└── {item.name}"
                     else:
-                        if (item.name in self.config['exclude_structure']['files'] or
-                            item.suffix in self.config['exclude_structure']['extensions']):
-                            self.logger.debug(f"Ignored file (structure): {item}")
-                            continue
+                        line = f"{prefix}├── {item.name}"
+                    
+                    if item.is_dir():
+                        line += "/"
+                    
+                    structure_lines.append(line)
+
+                    # If directory, process its contents
+                    if item.is_dir():
+                        add_to_structure(item, level + 1)
+
             except Exception as e:
                 self.logger.error(f"Error processing directory {path}: {str(e)}")
                 return
 
-        add_to_structure(root_path, is_root=True)
+        add_to_structure(root_path)
         return structure_lines
 
     def _generate_project_context(self, root_path: str) -> List[str]:
@@ -133,14 +146,17 @@ class XMLGenerator:
             # Add project context section
             output.extend(self._generate_project_context(root_path))
 
-            # Add structure section
+            # Add structure section - without XML sanitization for tree structure
             output.append("<structure_explanation>")
-            output.append(f"    {self._clean_xml_string(self.STRUCTURE_EXPLANATION.strip())}")
+            output.append(f"    {self.STRUCTURE_EXPLANATION.strip()}")
             output.append("</structure_explanation>")
             output.append("<structure>")
+            
+            # Add the tree structure directly without cleaning
             structure = self._generate_structure(root_path)
             for line in structure:
-                output.append(self._clean_xml_string(line))
+                output.append(line)
+            
             output.append("</structure>")
 
             # Process each file
