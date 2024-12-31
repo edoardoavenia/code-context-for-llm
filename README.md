@@ -51,22 +51,33 @@ Configure via `config.json`:
 ```json
 {
     "max_file_size_kb": 1024,
-        "exclude": {
+    "exclude": {
         "extensions": [".env", ".pyc", ".log"],
-        "files": ["LICENSE", "useless_file.txt"]
+        "files": ["LICENSE", "useless_file.txt"],
+        "max_depth": 4,
+        "max_files": 10
     },
     "exclude_structure": {
         "extensions": [".env", ".pyc", ".log", ".pdf"],
         "files": ["LICENSE", "useless_file.txt", ".gitignore"],
-        "directories": ["__pycache__", ".git", "venv"]
+        "directories": ["__pycache__", ".git", "venv"],
+        "max_depth": 4,
+        "max_files": 10
     }
 }
 ```
 
 ### Configuration Options
-- `max_file_size_kb`: Skip files larger than this size.
-- `exclude`: Files to skip when processing content.
-- `exclude_structure`: Files and directories to exclude from the structure representation.
+- `max_file_size_kb`: Skip files larger than this size
+- `exclude.extensions`: File extensions to skip when processing content
+- `exclude.files`: Specific files to skip when processing content
+- `exclude.max_depth`: Maximum directory depth for file content inclusion
+- `exclude.max_files`: Maximum number of files to include per directory level for content
+- `exclude_structure.extensions`: File extensions to skip in directory structure
+- `exclude_structure.files`: Specific files to skip in directory structure
+- `exclude_structure.directories`: Directory names to skip in structure
+- `exclude_structure.max_depth`: Maximum depth for directory structure visualization
+- `exclude_structure.max_files`: Maximum number of items (files/directories) to show per level in structure
 
 ## Output Location
 Files are saved to: `output/project_structure_[projectname]_[timestamp].txt`
@@ -100,4 +111,5 @@ The generated output is a simplified XML document, optimized for LLM processing 
 - Maintains structural consistency while prioritizing simplicity
 - Automatic file type detection and UTF-8 validation
 - Configurable file and directory exclusions
+- Depth and file count limits for both structure and content
 - Comprehensive error logging
