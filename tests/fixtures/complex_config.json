@@ -1,0 +1,16 @@
+{
+  "max_file_size_kb": 512,
+  "content_exclude": {
+    "extensions": [".bin", ".jpg", ".gif", ".png", ".env", ".cache", ".pyc"],
+    "files": ["LICENSE", "yarn.lock", "package-lock.json", ".gitignore"],
+    "max_depth": 6,
+    "max_files": 12
+  },
+  "structure_exclude": {
+    "extensions": [".bin", ".jpg", ".gif", ".png", ".pyc", ".log", ".cache", ".gz", ".zip"],
+    "directories": [".git", "node_modules", "venv", "__pycache__", ".pytest_cache", ".idea", ".vscode"],
+    "files": [".DS_Store", ".gitignore", "package-lock.json", "yarn.lock"],
+    "max_depth": 4,
+    "max_files": 30
+  }
+}
