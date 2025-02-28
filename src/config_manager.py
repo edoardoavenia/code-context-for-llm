@@ -64,10 +64,10 @@ class ConfigManager:
             validated_config = {
                 'max_file_size_kb': user_config.get('max_file_size_kb', schema.max_file_size_kb),
                 'content_exclude': {
-                    'extensions': user_config.get('exclude', {}).get('extensions', schema.exclude['extensions']),
-                    'files': user_config.get('exclude', {}).get('files', schema.exclude['files']),
-                    'max_depth': user_config.get('exclude', {}).get('max_depth', schema.exclude['max_depth']),
-                    'max_files': user_config.get('exclude', {}).get('max_files', schema.exclude['max_files'])
+                    'extensions': user_config.get('content_exclude', {}).get('extensions', schema.exclude['extensions']),
+                    'files': user_config.get('content_exclude', {}).get('files', schema.exclude['files']),
+                    'max_depth': user_config.get('content_exclude', {}).get('max_depth', schema.exclude['max_depth']),
+                    'max_files': user_config.get('content_exclude', {}).get('max_files', schema.exclude['max_files'])
                 },
                 'structure_exclude': {
                     'extensions': user_config.get('exclude_structure', {}).get('extensions', schema.exclude_structure['extensions']),
