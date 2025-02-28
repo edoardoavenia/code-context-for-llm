@@ -1,16 +1,16 @@
 {
     "max_file_size_kb": 10000,
-    "exclude": {
-        "extensions": [".env", ".pyc", ".log"],
-        "files": ["LICENSE", "useless_file.txt","poetry.lock","token_counter.py","prompts_loader.py"],
-        "directories": ["__pycache__", ".git", "venv","__pycache__",".pytest_cache","tests","formula","tutor-js","errors","output"],
-        "max_depth": 30,
-        "max_files": 50
+    "content_exclude": {
+        "extensions": [".env", ".pyc", ".log", ".cache", ".tmp",".pdf"],
+        "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
+        "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist","tests"],
+        "max_depth": 10,
+        "max_files": 30
     },
     "exclude_structure": {
-        "extensions": [".env", ".pyc", ".log", ".pdf"],
-        "files": ["LICENSE", "useless_file.txt", ".gitignore","poetry.lock","token_counter.py","prompts_loader.py"],
-        "directories": ["__pycache__", ".git", "venv","__pycache__",".pytest_cache","tests","formula","tutor-js","errors","output"],
+        "extensions": [".env", ".pyc", ".log", ".cache", ".tmp"],
+        "files": ["poetry.lock", "package-lock.json", "requirements.txt"],
+        "directories": ["__pycache__", ".git", "venv", "node_modules", ".pytest_cache"],
         "max_depth": 30,
         "max_files": 50
     }
