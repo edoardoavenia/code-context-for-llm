@@ -1,17 +1,21 @@
 # XML Project Context Generator
 
-Tool for converting project files and structure into a standardized XML format, designed to provide complete codebase context when working with LLMs. Automatically handles file scanning, content extraction, and structuring into a consistent XML format that LLMs can easily process.
+Tool for converting project files and structure into a standardized XML format. This tool is designed to provide complete codebase context for LLMs by automatically scanning directories, extracting file contents, and building a structured XML representation. The XML output now supports independent filtering for directory structure and file content, and includes an additional section for files whose content was extracted but do not appear in the structure tree.
 
 ## Requirements
 - Python 3.6+
 - UTF-8 encoded source files
 
 ## Usage
+
+Run the tool from the command line by specifying the project directory:
+
 ```bash
 python src/main_py /path/to/your/project
 ```
 
 ## Example Output
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <code>
@@ -57,84 +61,53 @@ python src/main_py /path/to/your/project
     <config_json>
 {
     "max_file_size_kb": 1024,
-    "exclude": {
+    "content_exclude": {
         "extensions": [".env", ".pyc", ".log"],
-        "files": ["LICENSE", "useless_file.txt","poetry.lock",".env"],
-        "directories": ["__pycache__", ".git", "venv",".pytest_cache","tests","output"],
+        "files": ["LICENSE", "useless_file.txt"],
         "max_depth": 15,
         "max_files": 25
     },
-    "exclude_structure": {
+    "structure_exclude": {
         "extensions": [".pyc", ".log", ".pdf"],
         "files": ["LICENSE", "useless_file.txt", ".gitignore"],
-        "directories": ["__pycache__", ".git", "venv",".pytest_cache","output"],
+        "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "output"],
         "max_depth": 10,
         "max_files": 50
     }
 }
     </config_json>
+    <orphan_files>
+        <!-- Files extracted from content processing that did not appear in the structure -->
+        <example_file>
+            File content goes here...
+        </example_file>
+    </orphan_files>
 </code>
 ```
 
 ## Configuration
-Configure via `config_json`:
-```json
-{
-    "max_file_size_kb": 1024,
-    "exclude": {
-        "extensions": [".env", ".pyc", ".log"],
-        "files": ["LICENSE", "useless_file.txt"],
-        "max_depth": 4,
-        "max_files": 10
-    },
-    "exclude_structure": {
-        "extensions": [".env", ".pyc", ".log", ".pdf"],
-        "files": ["LICENSE", "useless_file.txt", ".gitignore"],
-        "directories": ["__pycache__", ".git", "venv"],
-        "max_depth": 4,
-        "max_files": 10
-    }
-}
-```
 
-### Configuration Options
-- `max_file_size_kb`: Skip files larger than this size
-- `exclude.extensions`: File extensions to skip when processing content
-- `exclude.files`: Specific files to skip when processing content
-- `exclude.max_depth`: Maximum directory depth for file content inclusion
-- `exclude.max_files`: Maximum number of files to include per directory level for content
-- `exclude_structure.extensions`: File extensions to skip in directory structure
-- `exclude_structure.files`: Specific files to skip in directory structure
-- `exclude_structure.directories`: Directory names to skip in structure
-- `exclude_structure.max_depth`: Maximum depth for directory structure visualization
-- `exclude_structure.max_files`: Maximum number of items (files/directories) to show per level in structure
+The configuration is now split into two separate sections:
+
+- **content_exclude**: Controls which files are processed for content extraction.
+  - `extensions`: List of file extensions to exclude when extracting content.
+  - `files`: Specific file names to exclude from content extraction.
+  - `max_depth`: Maximum directory depth for processing file contents.
+  - `max_files`: Maximum number of files per directory level to extract content from.
+
+- **structure_exclude**: Controls which files and directories appear in the directory structure.
+  - `extensions`: List of file extensions to exclude from the structure.
+  - `files`: Specific file names to exclude from the structure.
+  - `directories`: Directory names to exclude from the structure.
+  - `max_depth`: Maximum directory depth to display in the structure.
+  - `max_files`: Maximum number of items (files/directories) to show per level in the structure.
 
 ## Output Location
-Files are saved to: `output/project_structure_[projectname]_[timestamp].txt`
 
-## Understanding the XML Output
+The output XML file is saved to the `output` directory with a filename pattern of:
 
-The output is structured as a valid XML file, providing a clear and organized representation of your project for LLMs. Here's a breakdown of the main sections:
+```
+project_structure_[projectname]_[timestamp].txt
+```
 
-*   **`<?xml version="1.0" encoding="UTF-8"?>`**:  The standard XML declaration specifying the version and encoding.
-*   **`<code>`**: The root element encapsulating the entire project context.
-*   **`<project_context>`**: Contains metadata about the generated output.
-    *   **`<project_name>`**: The name of the project directory.
-    *   **`<generation_timestamp>`**: The date and time when the XML was generated (in UTC).
-*   **`<structure_explanation>`**: Provides a description of the `<structure>` section, indicating that it represents the project's directory structure, taking into account the exclusions defined in the configuration file.
-*   **`<structure>`**: Presents the hierarchical directory structure of the project. Directories are indicated with a trailing `/`. The structure reflects the files and directories that were not excluded by the configuration.
-*   **`<[folder_name]>`**: Each folder is represented as an XML tag, containing nested folders and files. For example, the `<src>` tag contains `<main_py>` and other nested tags.
-    *   **`<[filename.extension]>`**: Each file's content is placed within a tag that includes the file's extension (e.g., `<main_py>`). The content is included directly with proper indentation for readability.
-
-## Key Features
-- Simplified XML generation optimized for LLM processing
-- **File Extensions:** File tags now include their full name with extensions (e.g., `README_md` instead of `README`)
-- **Folders Representation:** Directories are now represented as XML tags, ensuring a structured and hierarchical format.
-- **Proper Indentation:** The XML output is now correctly indented to improve readability and maintainability.
-- Clean, readable output without unnecessary XML complexities
-- Maintains structural consistency while prioritizing simplicity
-- Automatic file type detection and UTF-8 validation
-- Configurable file and directory exclusions
-- Depth and file count limits for both structure and content
-- Comprehensive error logging
-
+This revised README accurately reflects the new, decoupled configuration system and the independent handling of file structure and content in the XML output.
