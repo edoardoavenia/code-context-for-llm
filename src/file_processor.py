@@ -1,8 +1,8 @@
 from pathlib import Path
-import logging
+from logger_config import setup_logger
 from config_manager import ConfigManager
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 @dataclass
 class DirectoryStructure:
@@ -33,22 +33,10 @@ class FileProcessor:
         self.config = ConfigManager().get_config()
         self.logger.info("Using unified exclusion configuration: %s", self.config['exclude'])
         self.items_count = {}  # Unified counter for items processed per depth
+        self.files_content = []  # Ensure initialization
 
     def _setup_logging(self):
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
-        self.logger = logging.getLogger(__name__)
-
-    def _is_utf8(self, file_path: Path) -> bool:
-        """Checks whether the file is UTF-8 encoded."""
-        try:
-            with open(file_path, 'rb') as f:
-                f.read().decode('utf-8')
-            return True
-        except UnicodeDecodeError:
-            return False
+        self.logger = setup_logger(__name__)
 
     def _should_include_file(self, file_path: Path) -> bool:
         """
@@ -65,11 +53,34 @@ class FileProcessor:
             return False
         if file_path.name in self.config['exclude']['files']:
             return False
-        if not self._is_utf8(file_path):
-            return False
         return True
 
-    def _process_directory(self, path: Path, root_path: Path, current_depth: int = 0, current_rel_path: str = "") -> DirectoryStructure:
+    def _read_file_content(self, file_path: Path, chunk_size: int = 4096) -> Optional[str]:
+        """
+        Reads the file once in binary mode.
+        Reads the first chunk (default 4 KB) to verify UTF-8 encoding.
+        If valid, reads the remainder and returns the decoded content.
+        Returns None if the file is not UTF-8 encoded or an error occurs.
+        """
+        try:
+            with open(file_path, 'rb') as f:
+                chunk = f.read(chunk_size)
+                try:
+                    # Validate UTF-8 encoding using only the first chunk.
+                    chunk.decode('utf-8')
+                except UnicodeDecodeError:
+                    self.logger.info("File %s is not UTF-8 encoded.", file_path)
+                    return None
+                # Read the rest of the file.
+                remainder = f.read()
+                full_bytes = chunk + remainder
+                content = full_bytes.decode('utf-8')
+                return content
+        except Exception as e:
+            self.logger.error("Error reading file %s: %s", file_path, str(e))
+            return None
+
+    def _process_directory(self, path: Path, root_path: Path, current_depth: int = 0, current_rel_path: str = "") -> Optional[DirectoryStructure]:
         """
         Recursively builds the directory structure and extracts file contents.
         Applies unified exclusion settings and unified counters for both structure and content.
@@ -108,16 +119,13 @@ class FileProcessor:
                         dir_structure.children.append(file_node)
                         # Process file content if the file qualifies
                         if self._should_include_file(item):
-                            try:
-                                with open(item, 'r', encoding='utf-8') as f:
-                                    content = f.read()
+                            content = self._read_file_content(item)
+                            if content is not None:
                                 self.files_content.append({
                                     'path': file_rel_path,
                                     'content': content,
                                     'depth': current_depth
                                 })
-                            except Exception as e:
-                                self.logger.error("Error reading file %s: %s", item, str(e))
                         self.items_count[current_depth] += 1
         except Exception as e:
             self.logger.error("Error processing directory %s: %s", path, str(e))
