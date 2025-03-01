@@ -6,6 +6,7 @@ from file_processor import FileProcessor
 from xml_generator import XMLGenerator
 import re
 import sys
+from config_manager import ConfigManager
 
 def setup_logging():
     logging.basicConfig(
@@ -57,10 +58,20 @@ def main():
         help="Project directory path",
         type=str
     )
+    parser.add_argument(
+        "--config",
+        help="Optional configuration file path (default: config.json)",
+        type=str,
+        default="config.json"
+    )
 
     try:
         args = parser.parse_args()
         project_path = validate_path(args.path)
+        
+        # Load configuration from the specified file or use the default config.json
+        ConfigManager().reload_config(args.config)
+        
         processor = FileProcessor()
         generator = XMLGenerator()
 
