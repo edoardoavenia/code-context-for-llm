@@ -6,13 +6,12 @@ from datetime import datetime
 class XMLGenerator:
     """
     Generates an XML representation of the project.
-    This implementation decouples file content inclusion from the directory structure,
-    allowing independent control over structure and content exclusions.
+    The unified exclusion configuration is applied uniformly for both structure and file content.
     """
     STRUCTURE_EXPLANATION = """
     This section represents the directory structure of the project.
     It includes all UTF-8 encoded files that were not excluded based on the
-    configuration file, which allows excluding files by name, extension,
+    unified configuration, which applies exclusions by name, extension,
     or size, and directories by name.
     """
 
@@ -143,5 +142,5 @@ class XMLGenerator:
             return "\n".join(lines)
 
         except Exception as e:
-            self.logger.error(f"Error during XML generation: {str(e)}")
+            self.logger.error("Error during XML generation: %s", str(e))
             raise

@@ -69,7 +69,7 @@ def main():
         
         project_name = project_path.name
         output_file = save_output(xml_content, project_name)
-        logger.info(f"File saved: {output_file}")
+        logger.info("File saved: %s", output_file)
 
     except Exception as e:
         logger.error(str(e))
