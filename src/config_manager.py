@@ -1,5 +1,5 @@
 import json
-import logging
+from logger_config import setup_logger
 from typing import Dict, Any
 from dataclasses import dataclass, field
 
@@ -20,7 +20,7 @@ class ConfigManager:
     """Singleton configuration manager that loads and validates configuration."""
     _instance = None
     _config = None
-    _logger = logging.getLogger(__name__)
+    _logger = setup_logger(__name__)
 
     def __new__(cls):
         if cls._instance is None:
@@ -39,7 +39,7 @@ class ConfigManager:
         try:
             with open(config_path, 'r') as f:
                 user_config = json.load(f)
-            
+
             schema = ConfigurationSchema()
             user_exclude = user_config.get('exclude', {})
 
@@ -62,6 +62,11 @@ class ConfigManager:
                 raise ValueError("exclude.max_depth must be an integer")
             if not isinstance(validated_config['exclude']['max_files'], int):
                 raise ValueError("exclude.max_files must be an integer")
+
+            # Prevent crash: Ensure max_depth is not set to 0.
+            if validated_config['exclude']['max_depth'] <= 0:
+                self._logger.warning("Invalid configuration: exclude.max_depth is set to 0. Resetting to minimum value 1.")
+                validated_config['exclude']['max_depth'] = 1
 
             self._config = validated_config
             self._logger.info("Configuration loaded successfully")
