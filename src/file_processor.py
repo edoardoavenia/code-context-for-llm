@@ -99,6 +99,11 @@ class FileProcessor:
         try:
             items = sorted(path.iterdir(), key=lambda x: (x.is_file(), x.name.lower()))
             for item in items:
+                # Skip symlinks to prevent cyclic traversal.
+                if item.is_symlink():
+                    self.logger.debug("Skipping symlink: %s", item)
+                    continue
+
                 # Process directories
                 if item.is_dir():
                     if item.name in self.config['exclude']['directories']:
