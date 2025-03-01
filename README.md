@@ -1,6 +1,6 @@
 # XML Project Context Generator
 
-This tool converts a project's files and structure into a standardized XML format, providing complete codebase context for language models. The XML output supports a unified configuration for filtering both the directory structure and file content. It also supports an optional configuration file parameter.
+This tool converts a project's files and structure into a standardized XML format, providing complete codebase context for language models. The XML output supports a unified configuration for filtering both the directory structure and file content. It also supports an optional configuration file parameter. Recent improvements include a centralized logging setup, robust configuration validation (ensuring max_depth is never zero), optimized UTF‑8 verification with a single file read, and a per-branch file counter to avoid unnecessary exclusion of valid files.
 
 ## Requirements
 - Python 3.6+
@@ -75,7 +75,7 @@ python src/main.py /path/to/your/project --config /path/to/custom_config.json
 </code>
 
 ## Configuration
-The configuration is now unified. All exclusion settings (extensions, file names, directories, maximum depth, and maximum number of files) are contained in a single key named "exclude" within the configuration file.
+The configuration is unified. All exclusion settings—extensions, file names, directories, maximum depth, and maximum number of files—are contained in a single key named "exclude" within the configuration file. Additionally, the tool now validates the configuration to ensure that max_depth is never zero, and it employs internal optimizations (such as a single-pass file read for UTF‑8 verification and content extraction, and a per-branch file counter) to improve performance.
 
 By default, the tool reads from config.json. You can override this behavior by specifying a custom configuration file with the --config parameter.
 
