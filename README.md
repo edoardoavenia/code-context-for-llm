@@ -1,22 +1,18 @@
 # XML Project Context Generator
 
-Tool for converting project files and structure into a standardized XML format. This tool is designed to provide complete codebase context for LLMs by automatically scanning directories, extracting file contents, and building a structured XML representation. The XML output now supports independent filtering for directory structure and file content, and includes an additional section for files whose content was extracted but do not appear in the structure tree.
+This tool converts a project's files and structure into a standardized XML format, providing complete codebase context for language models. The XML output supports a unified configuration for filtering both the directory structure and file content. It also supports an optional configuration file parameter.
 
 ## Requirements
 - Python 3.6+
 - UTF-8 encoded source files
 
 ## Usage
+Run the tool from the command line by specifying the project directory. Optionally, you can provide a custom configuration file using the --config parameter. If no configuration file is provided, the tool uses config.json as default.
 
-Run the tool from the command line by specifying the project directory:
-
-```bash
-python src/main_py /path/to/your/project
-```
+Example:
+python src/main.py /path/to/your/project --config /path/to/custom_config.json
 
 ## Example Output
-
-```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <code>
     <project_context>
@@ -26,18 +22,18 @@ python src/main_py /path/to/your/project
     <structure_explanation>
         This section represents the directory structure of the project.
         It includes all UTF-8 encoded files that were not excluded based on the
-        configuration file, which allows excluding files by name, extension,
+        unified configuration, which applies exclusions by name, extension,
         or size, and directories by name.
     </structure_explanation>
     <structure>
         sample_project/
         ├── src/
         │   ├── utils/
-        │   │   └── helper_py
-        │   └── main_py
+        │   │   └── helper.py
+        │   └── main.py
         ├── docs/
-        │   └── README_md
-        └── config_json
+        │   └── README.md
+        └── config.json
     </structure>
     <src>
         <utils>
@@ -60,19 +56,13 @@ python src/main_py /path/to/your/project
     </docs>
     <config_json>
 {
-    "max_file_size_kb": 1024,
-    "content_exclude": {
-        "extensions": [".env", ".pyc", ".log"],
-        "files": ["LICENSE", "useless_file.txt"],
-        "max_depth": 15,
-        "max_files": 25
-    },
-    "structure_exclude": {
-        "extensions": [".pyc", ".log", ".pdf"],
-        "files": ["LICENSE", "useless_file.txt", ".gitignore"],
-        "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "output"],
-        "max_depth": 10,
-        "max_files": 50
+    "max_file_size_kb": 10000,
+    "exclude": {
+        "extensions": [".env", ".pyc", ".log", ".cache", ".tmp", ".pdf"],
+        "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
+        "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist", "node_modules"],
+        "max_depth": 20,
+        "max_files": 30
     }
 }
     </config_json>
@@ -83,31 +73,20 @@ python src/main_py /path/to/your/project
         </example_file>
     </orphan_files>
 </code>
-```
 
 ## Configuration
+The configuration is now unified. All exclusion settings (extensions, file names, directories, maximum depth, and maximum number of files) are contained in a single key named "exclude" within the configuration file.
 
-The configuration is now split into two separate sections:
+By default, the tool reads from config.json. You can override this behavior by specifying a custom configuration file with the --config parameter.
 
-- **content_exclude**: Controls which files are processed for content extraction.
-  - `extensions`: List of file extensions to exclude when extracting content.
-  - `files`: Specific file names to exclude from content extraction.
-  - `max_depth`: Maximum directory depth for processing file contents.
-  - `max_files`: Maximum number of files per directory level to extract content from.
-
-- **structure_exclude**: Controls which files and directories appear in the directory structure.
-  - `extensions`: List of file extensions to exclude from the structure.
-  - `files`: Specific file names to exclude from the structure.
-  - `directories`: Directory names to exclude from the structure.
-  - `max_depth`: Maximum directory depth to display in the structure.
-  - `max_files`: Maximum number of items (files/directories) to show per level in the structure.
-
-## Output Location
-
-The output XML file is saved to the `output` directory with a filename pattern of:
-
-```
-project_structure_[projectname]_[timestamp].txt
-```
-
-This revised README accurately reflects the new, decoupled configuration system and the independent handling of file structure and content in the XML output.
+Example configuration (config.json):
+{
+  "max_file_size_kb": 10000,
+  "exclude": {
+    "extensions": [".env", ".pyc", ".log", ".cache", ".tmp", ".pdf"],
+    "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
+    "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist", "node_modules"],
+    "max_depth": 20,
+    "max_files": 30
+  }
+}
