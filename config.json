@@ -1,11 +1,25 @@
 {
-    "max_file_size_kb": 10000,
-    "exclude": {
-      "extensions": [".env", ".pyc", ".log", ".cache", ".tmp", ".pdf"],
-      "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
-      "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist", "node_modules"],
-      "max_depth": 20,
-      "max_files": 30
-    }
+  "max_file_size_kb": 10000,
+  "exclude": {
+    "extensions": [
+      ".pyc",
+      ".log",
+      ".cache",
+      ".tmp"
+    ],
+    "files": [
+      ".env"
+    ],
+    "directories": [
+      "__pycache__",
+      ".git",
+      "venv",
+      ".pytest_cache",
+      "node_modules",
+      "dist",
+      "build"
+    ],
+    "max_depth": 20,
+    "max_files": 300
   }
-  
+}

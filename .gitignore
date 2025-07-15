@@ -4,3 +4,4 @@ __pycache__/
 *.log
 .env
 venv/
+.pytest_cache
