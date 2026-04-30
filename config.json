@@ -1,23 +1,37 @@
 {
-  "max_file_size_kb": 10000,
+  "max_file_size_kb": 1024,
   "exclude": {
     "extensions": [
-      ".pyc",
-      ".log",
-      ".cache",
-      ".tmp"
+      ".pyc", ".pyo", ".pyd",
+      ".log", ".tmp", ".cache", ".lock", ".bak", ".swp",
+      ".min.js", ".min.css", ".map",
+      ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".ico", ".bmp",
+      ".mp3", ".wav", ".ogg", ".flac",
+      ".mp4", ".webm", ".mov", ".avi", ".mkv",
+      ".pdf", ".zip", ".tar", ".gz", ".7z", ".rar",
+      ".woff", ".woff2", ".ttf", ".otf", ".eot",
+      ".class", ".jar", ".so", ".dll", ".dylib", ".exe",
+      ".o", ".obj", ".a", ".lib",
+      ".db", ".sqlite", ".sqlite3",
+      ".bin", ".dat", ".wasm",
+      ".d.ts"
     ],
     "files": [
-      ".env"
+      ".env", ".env.local", ".env.production",
+      "poetry.lock", "Pipfile.lock",
+      "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
+      "Cargo.lock", "Gemfile.lock", "composer.lock", "go.sum"
     ],
     "directories": [
-      "__pycache__",
-      ".git",
-      "venv",
-      ".pytest_cache",
-      "node_modules",
-      "dist",
-      "build"
+      "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox",
+      ".git", ".svn", ".hg",
+      "node_modules", ".next", ".nuxt", ".turbo",
+      "venv", ".venv", "env",
+      "dist", "build", "target", "out",
+      ".idea", ".vscode",
+      "coverage", "htmlcov", ".coverage",
+      "output", "logs", "tmp",
+      ".claude"
     ],
     "max_depth": 20,
     "max_files": 300

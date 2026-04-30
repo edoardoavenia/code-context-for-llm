@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "code-context-for-llm"
 version = "0.2.0"
@@ -27,8 +31,23 @@ dev = [
     "ruff>=0.6",
 ]
 
+[project.scripts]
+code-context = "code_context.cli:main"
+
 [project.urls]
 Repository = "https://github.com/edoardoavenia/code-context-for-llm"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/code_context"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/code_context",
+    "config.json",
+    "README.md",
+    "LICENSE",
+    "tests",
+]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
