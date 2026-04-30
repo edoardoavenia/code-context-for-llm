@@ -7,10 +7,78 @@ This tool converts a project's files and structure into a standardized XML forma
 - UTF-8 encoded source files
 
 ## Usage
+
+### Basic Usage (XML Generation)
 Run the tool from the command line by specifying the project directory. Optionally, you can provide a custom configuration file using the --config parameter. If no configuration file is provided, the tool uses config.json as default.
 
-Example:
+```bash
 python src/main.py /path/to/your/project --config /path/to/custom_config.json
+```
+
+This generates an XML file in the `output/` directory containing the complete project structure and file contents.
+
+### Inspect Mode (Tree View with Character Counts)
+The tool provides an **inspect mode** (`-i` or `--inspect`) that displays a colored tree view of the project with character counts, without generating XML output.
+
+#### Show Files and Directories
+Display the complete directory tree with character counts for all files and total counts for directories:
+
+```bash
+python src/main.py /path/to/your/project -i
+```
+
+Example output:
+```
+tests/ (45.632 chars total)
+├── .gitignore (97 chars)
+├── conftest.py (3.126 chars)
+├── pytest.ini (288 chars)
+├── test_file_processor.py (11.564 chars)
+└── test_xml_generator.py (8.813 chars)
+```
+
+#### Show Only Directories
+Display only directories with their total character counts (useful for quick project overview):
+
+```bash
+python src/main.py /path/to/your/project -i -d
+```
+
+Example output:
+```
+code-context-for-llm/ (139.293 chars total)
+├── .claude/ (125 chars total)
+├── repo.git/ (26.952 chars total)
+│   ├── info/ (240 chars total)
+│   └── refs/ (0 chars total)
+├── src/ (28.639 chars total)
+└── tests/ (45.632 chars total)
+```
+
+### Color Output
+Character counts are **automatically colored** based on relative size within the project:
+- 🟢 **Green**: smallest files/directories (0-25%)
+- 🟡 **Yellow**: small-medium (25-50%)
+- 🟠 **Orange**: medium-large (50-75%)
+- 🔴 **Red**: largest files/directories (75-100%)
+
+Colors are **automatically detected**:
+- ✅ Enabled when output goes to an interactive terminal
+- ❌ Disabled when output is piped/redirected
+
+To manually disable colors:
+```bash
+python src/main.py /path/to/your/project -i --no-color
+# or
+NO_COLOR=1 python src/main.py /path/to/your/project -i
+```
+
+### Command-Line Options
+- `path`: Project directory to analyze (required)
+- `--config PATH`: Custom configuration file (default: config.json)
+- `-i, --inspect`: Inspect mode - show tree with character counts only (no XML output)
+- `-d, --directories-only`: Show only directories (use with `-i`)
+- `--no-color`: Disable colored output
 
 ## Example Output
 <?xml version="1.0" encoding="UTF-8"?>
