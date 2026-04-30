@@ -1,7 +1,12 @@
 import json
+from pathlib import Path
 from logger_config import setup_logger
 from typing import Dict, Any
 from dataclasses import dataclass, field
+
+# Default config lives next to the tool, not in the user's CWD, so the tool
+# behaves the same regardless of where it is invoked from.
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
 @dataclass
 class ConfigurationSchema:
@@ -31,11 +36,15 @@ class ConfigManager:
         if self._config is None:
             self._load_config()
 
-    def _load_config(self, config_path: str = "config.json") -> None:
+    def _load_config(self, config_path: str | None = None) -> None:
         """
         Loads and validates configuration from file.
         Expects a unified exclusion configuration under the key 'exclude'.
+        When config_path is None, falls back to the default config that
+        ships with the tool (resolved next to the tool itself, not CWD).
         """
+        if config_path is None:
+            config_path = str(DEFAULT_CONFIG_PATH)
         try:
             with open(config_path, 'r') as f:
                 user_config = json.load(f)
@@ -105,6 +114,6 @@ class ConfigManager:
         """Returns the unified exclusion configuration."""
         return self._config['exclude'].copy()
 
-    def reload_config(self, config_path: str = "config.json") -> None:
-        """Reloads configuration from file."""
+    def reload_config(self, config_path: str | None = None) -> None:
+        """Reloads configuration from file (defaults to the bundled config)."""
         self._load_config(config_path)
