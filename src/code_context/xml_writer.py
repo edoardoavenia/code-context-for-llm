@@ -37,7 +37,7 @@ def generate_xml(project_name: str, root: FileNode) -> str:
         ]
     )
     for line in _tree_lines(root):
-        out.append(f"        {line}")
+        out.append(f"        {escape(line)}")
     out.append("    </structure>")
     _emit(root, out, indent=1)
     out.append("</code>")
