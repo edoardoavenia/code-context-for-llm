@@ -1,7 +1,0 @@
-# Test-specific items to ignore
-__pycache__/
-.pytest_cache/
-*.pyc
-.coverage
-htmlcov/
-.hypothesis/

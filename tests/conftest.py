@@ -1,107 +1,54 @@
-import pytest
-import os
-import json
-import tempfile
-import shutil
+"""Shared fixtures for the test suite."""
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, Any, Generator, Tuple
+
+import pytest
 
 
 @pytest.fixture
-def temp_dir() -> Generator[Path, None, None]:
-    """Create a temporary directory for test files."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        yield Path(tmp_dir)
+def sample_project(tmp_path: Path) -> Path:
+    """Create a small, predictable project tree under ``tmp_path/proj``.
 
+    Layout::
 
-@pytest.fixture
-def project_structure(temp_dir: Path) -> Generator[Path, None, None]:
+        proj/
+            README.md
+            main.py
+            xml.py             (UTF-8, contains <, >, &)
+            data.bin           (non UTF-8)
+            .env               (excluded by name in the standard test config)
+            big.txt            (5000 bytes, oversized for max_file_size_kb=4)
+            src/
+                util.py
+                __pycache__/
+                    cached.pyc
+            assets/
+                logo.png
+            empty_dir/
     """
-    Creates a standard test project structure with predictable files and directories.
-    
-    Structure:
-    - project_root/
-      - src/
-        - main.py
-        - utils/
-          - helper.py
-          - data.bin (binary file)
-      - docs/
-        - README.md
-      - tests/
-        - test_main.py
-      - .git/
-        - HEAD
-      - .env
-      - config.json
-    """
-    # Create directories
-    project_root = temp_dir / "test_project"
-    project_root.mkdir()
-    
-    src_dir = project_root / "src"
-    src_dir.mkdir()
-    utils_dir = src_dir / "utils"
-    utils_dir.mkdir()
-    docs_dir = project_root / "docs"
-    docs_dir.mkdir()
-    tests_dir = project_root / "tests"
-    tests_dir.mkdir()
-    git_dir = project_root / ".git"
-    git_dir.mkdir()
-    
-    # Create files with content
-    (src_dir / "main.py").write_text("def main():\n    print('Hello, world!')\n\nif __name__ == '__main__':\n    main()")
-    (utils_dir / "helper.py").write_text("def helper_function():\n    return 'This is a helper function'")
-    
-    # Create a binary file
-    with open(utils_dir / "data.bin", "wb") as f:
-        f.write(os.urandom(100))
-    
-    (docs_dir / "README.md").write_text("# Test Project\n\nThis is a test project for testing purposes.")
-    (tests_dir / "test_main.py").write_text("def test_main():\n    assert True")
-    (git_dir / "HEAD").write_text("ref: refs/heads/main")
-    (project_root / ".env").write_text("SECRET_KEY=test_secret_key")
-    (project_root / "config.json").write_text('{"setting": "value"}')
-    
-    yield project_root
-    
-    # Cleanup is handled by tempfile.TemporaryDirectory's context manager
+    root = tmp_path / "proj"
+    root.mkdir()
+    (root / "README.md").write_text("# Sample\n", encoding="utf-8")
+    (root / "main.py").write_text("def main():\n    print('hi')\n", encoding="utf-8")
+    (root / "xml.py").write_text(
+        "x: int = 1\nif a < b and b > 0 and c & d:\n    pass\n",
+        encoding="utf-8",
+    )
+    (root / "data.bin").write_bytes(bytes([0xFF, 0xFE, 0x00, 0xC0]))
+    (root / ".env").write_text("SECRET=1\n", encoding="utf-8")
+    (root / "big.txt").write_text("a" * 5000, encoding="utf-8")
 
+    src = root / "src"
+    src.mkdir()
+    (src / "util.py").write_text("VAL = 1\n", encoding="utf-8")
+    pycache = src / "__pycache__"
+    pycache.mkdir()
+    (pycache / "cached.pyc").write_bytes(b"\x00\x01\x02")
 
-@pytest.fixture
-def default_config() -> Dict[str, Any]:
-    """Returns a default configuration for testing."""
-    return {
-        "max_file_size_kb": 1024,
-        "exclude": {
-            "extensions": [".env", ".bin"],
-            "files": ["HEAD"],
-            "max_depth": 3,
-            "max_files": 5
-        },
-        "exclude_structure": {
-            "extensions": [".bin", ".env"],
-            "directories": [".git", "tests"],
-            "files": ["HEAD", "config.json"],
-            "max_depth": 2,
-            "max_files": 3
-        }
-    }
+    assets = root / "assets"
+    assets.mkdir()
+    (assets / "logo.png").write_bytes(bytes([0x89, 0x50, 0x4E, 0x47]))
 
-
-@pytest.fixture
-def config_file(temp_dir: Path, default_config: Dict[str, Any]) -> Path:
-    """Creates a temporary config.json file with test configuration."""
-    config_path = temp_dir / "config.json"
-    with open(config_path, "w") as f:
-        json.dump(default_config, f, indent=2)
-    return config_path
-
-
-@pytest.fixture
-def original_cwd() -> Generator[str, None, None]:
-    """Preserve original working directory."""
-    original = os.getcwd()
-    yield original
-    os.chdir(original)
+    (root / "empty_dir").mkdir()
+    return root

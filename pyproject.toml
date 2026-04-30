@@ -52,6 +52,7 @@ include = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = ["-ra", "--strict-markers"]
 markers = [
     "slow: deselect with '-m \"not slow\"'",
