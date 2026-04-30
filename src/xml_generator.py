@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from xml.sax.saxutils import escape
 from config_manager import ConfigManager
 from datetime import datetime
 
@@ -65,9 +66,8 @@ class XMLGenerator:
                 file_tag = self._sanitize_tag_name(child.name)
                 lines.append(f"{indent}    <{file_tag}>")
                 content = file_contents.get(file_path, '')
-                # Indent file content for readability
-                content_lines = content.split('\n')
-                for line in content_lines:
+                # Escape XML special chars (<, >, &) and indent for readability.
+                for line in escape(content).split('\n'):
                     lines.append(f"{indent}        {line}")
                 lines.append(f"{indent}    </{file_tag}>")
         lines.append(f"{indent}</{tag_name}>")
@@ -99,7 +99,7 @@ class XMLGenerator:
             project_name = Path(root_path).name
             lines.extend([
                 "    <project_context>",
-                f"        <project_name>{project_name}</project_name>",
+                f"        <project_name>{escape(project_name)}</project_name>",
                 f"        <generation_timestamp>{datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</generation_timestamp>",
                 "    </project_context>"
             ])
@@ -132,8 +132,7 @@ class XMLGenerator:
                 for path, content in sorted(orphan_files.items()):
                     file_tag = self._sanitize_tag_name(path.replace('/', '_'))
                     lines.append(f"        <{file_tag}>")
-                    content_lines = content.split('\n')
-                    for line in content_lines:
+                    for line in escape(content).split('\n'):
                         lines.append(f"            {line}")
                     lines.append(f"        </{file_tag}>")
                 lines.append("    </orphan_files>")
