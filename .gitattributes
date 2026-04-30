@@ -1,0 +1,17 @@
+# Normalize line endings to LF in the repository regardless of platform.
+* text=auto eol=lf
+
+# Explicit text files
+*.py    text eol=lf
+*.toml  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.sh    text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+
+# Binary
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.pdf   binary

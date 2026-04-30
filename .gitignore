@@ -1,7 +1,32 @@
+# Generated output
 output/
+
+# Python
 __pycache__/
-*.pyc
-*.log
-.env
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
 venv/
-.pytest_cache
+.venv/
+env/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local secrets and logs
+.env
+*.log
+
+# Local Claude/agent artifacts
+.claude/
+repo.git/
+agent_notes_*.md
