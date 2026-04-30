@@ -114,22 +114,28 @@ class FileProcessor:
                             dir_structure.children.append(child_structure)
                             local_count += 1
                 else:
-                    # Process files uniformly for both structure and content
-                    if item.suffix in self.config['exclude']['extensions'] or item.name in self.config['exclude']['files']:
+                    # Unified inclusion: a file appears in the structure tree
+                    # iff its content is also included. Apply name/extension
+                    # filters, the size limit, and UTF-8 readability before
+                    # spending a slot on this branch.
+                    if item.suffix in self.config['exclude']['extensions']:
+                        continue
+                    if item.name in self.config['exclude']['files']:
+                        continue
+                    if not self._should_include_file(item):
+                        continue
+                    content = self._read_file_content(item)
+                    if content is None:
                         continue
                     if local_count < max_files:
                         file_rel_path = f"{current_dir_rel_path}/{item.name}"
                         file_node = DirectoryStructure(name=item.name, path=file_rel_path, is_dir=False, depth=current_depth)
                         dir_structure.children.append(file_node)
-                        # Process file content if the file qualifies
-                        if self._should_include_file(item):
-                            content = self._read_file_content(item)
-                            if content is not None:
-                                self.files_content.append({
-                                    'path': file_rel_path,
-                                    'content': content,
-                                    'depth': current_depth
-                                })
+                        self.files_content.append({
+                            'path': file_rel_path,
+                            'content': content,
+                            'depth': current_depth,
+                        })
                         local_count += 1
         except Exception as e:
             self.logger.error("Error processing directory %s: %s", path, str(e))
