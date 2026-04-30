@@ -1,160 +1,190 @@
-# XML Project Context Generator
+# code-context-for-llm
 
-This tool converts a project's files and structure into a standardized XML format, providing complete codebase context for language models. The XML output supports a unified configuration for filtering both the directory structure and file content. It also supports an optional configuration file parameter. Recent improvements include a centralized logging setup, robust configuration validation (ensuring max_depth is never zero), optimized UTF‑8 verification with a single file read, and a per-branch file counter to avoid unnecessary exclusion of valid files.
+Convert a project's structure and source files into a single, well-formed XML
+document suitable as context for a large language model.
+
+The tool walks a project directory, applies configurable exclusions, validates
+that each file is UTF-8, and emits one XML document with:
+
+- the project name and a UTC generation timestamp,
+- a tree drawing of the included structure,
+- the content of every included file under a sanitized tag.
+
+It also offers an **inspect** mode that prints the same tree with per-entry
+character counts and adaptive colors, useful for quickly seeing what would
+end up in the LLM context and how big each part is.
 
 ## Requirements
-- Python 3.6+
-- UTF-8 encoded source files
+
+- Python 3.10 or newer
+- UTF-8 encoded source files (non-UTF-8 files are skipped)
+
+## Installation
+
+```bash
+pip install -e .
+```
+
+This installs the `code-context` console script. The package can also be run
+without installation:
+
+```bash
+PYTHONPATH=src python -m code_context PATH
+```
 
 ## Usage
 
-### Basic Usage (XML Generation)
-Run the tool from the command line by specifying the project directory. Optionally, you can provide a custom configuration file using the --config parameter. If no configuration file is provided, the tool uses config.json as default.
+### Generate XML output
 
 ```bash
-python src/main.py /path/to/your/project --config /path/to/custom_config.json
+code-context /path/to/project
 ```
 
-This generates an XML file in the `output/` directory containing the complete project structure and file contents.
+The XML is written to `output/project_structure_<name>_<timestamp>.txt` in the
+current working directory.
 
-### Inspect Mode (Tree View with Character Counts)
-The tool provides an **inspect mode** (`-i` or `--inspect`) that displays a colored tree view of the project with character counts, without generating XML output.
+### Inspect mode
 
-#### Show Files and Directories
-Display the complete directory tree with character counts for all files and total counts for directories:
+Print a colored tree with character counts and exit (no file is written):
 
 ```bash
-python src/main.py /path/to/your/project -i
+code-context /path/to/project -i
 ```
 
-Example output:
 ```
-tests/ (45.632 chars total)
-├── .gitignore (97 chars)
-├── conftest.py (3.126 chars)
-├── pytest.ini (288 chars)
-├── test_file_processor.py (11.564 chars)
-└── test_xml_generator.py (8.813 chars)
-```
-
-#### Show Only Directories
-Display only directories with their total character counts (useful for quick project overview):
-
-```bash
-python src/main.py /path/to/your/project -i -d
-```
-
-Example output:
-```
-code-context-for-llm/ (139.293 chars total)
-├── .claude/ (125 chars total)
-├── repo.git/ (26.952 chars total)
-│   ├── info/ (240 chars total)
-│   └── refs/ (0 chars total)
+proj/ (46.212 chars total)
 ├── src/ (28.639 chars total)
-└── tests/ (45.632 chars total)
+│   ├── main.py (4.821 chars)
+│   └── util.py (1.244 chars)
+└── README.md (2.062 chars)
 ```
 
-### Color Output
-Character counts are **automatically colored** based on relative size within the project:
-- 🟢 **Green**: smallest files/directories (0-25%)
-- 🟡 **Yellow**: small-medium (25-50%)
-- 🟠 **Orange**: medium-large (50-75%)
-- 🔴 **Red**: largest files/directories (75-100%)
+Show only directories:
 
-Colors are **automatically detected**:
-- ✅ Enabled when output goes to an interactive terminal
-- ❌ Disabled when output is piped/redirected
-
-To manually disable colors:
 ```bash
-python src/main.py /path/to/your/project -i --no-color
-# or
-NO_COLOR=1 python src/main.py /path/to/your/project -i
+code-context /path/to/project -i -d
 ```
 
-### Command-Line Options
-- `path`: Project directory to analyze (required)
-- `--config PATH`: Custom configuration file (default: config.json)
-- `-i, --inspect`: Inspect mode - show tree with character counts only (no XML output)
-- `-d, --directories-only`: Show only directories (use with `-i`)
-- `--no-color`: Disable colored output
+### Color output
 
-## Example Output
+Counts are shaded by relative size, on independent scales for files and
+directories: green (smallest 25%), yellow, orange, red (largest 25%).
+
+Colors are auto-detected: enabled on a real terminal, disabled when output is
+redirected. Disable manually with `--no-color` or by setting the
+[`NO_COLOR`](https://no-color.org) environment variable.
+
+### CLI reference
+
+```
+code-context PATH [--config FILE] [-i] [-d] [--no-color]
+
+  PATH                 Project directory to scan.
+  --config FILE        Custom configuration file (default: bundled config.json).
+  -i, --inspect        Show tree with character counts; do not write XML.
+  -d, --directories-only   With --inspect, hide files.
+  --no-color           Disable colored output.
+```
+
+## Configuration
+
+Configuration lives in `config.json` next to the package, or in any file
+passed via `--config`. Format:
+
+```json
+{
+  "max_file_size_kb": 1024,
+  "exclude": {
+    "extensions": [".png", ".pyc"],
+    "files": [".env", "package-lock.json"],
+    "directories": ["node_modules", ".git"],
+    "max_depth": 20,
+    "max_files": 300
+  }
+}
+```
+
+| Key                         | Meaning                                                |
+|-----------------------------|--------------------------------------------------------|
+| `max_file_size_kb`          | Files larger than this are skipped.                    |
+| `exclude.extensions`        | Suffixes (with leading dot) to skip.                   |
+| `exclude.files`             | Exact file names to skip.                              |
+| `exclude.directories`       | Directory names to skip entirely (recursive).          |
+| `exclude.max_depth`         | Maximum recursion depth.                               |
+| `exclude.max_files`         | Maximum entries kept per directory branch.             |
+
+A file is included **iff** it passes every filter (extension, name, size,
+UTF-8 readability). Structure and content always agree by construction.
+
+Invalid or missing configuration falls back to safe defaults with a warning
+in the log; the tool never crashes on a bad config.
+
+## Library usage
+
+```python
+from code_context import Config, ExcludeConfig, scan, generate_xml
+
+config = Config(
+    max_file_size_kb=512,
+    exclude=ExcludeConfig(
+        extensions=(".png", ".pyc"),
+        directories=("node_modules", ".git"),
+        max_depth=10,
+        max_files=200,
+    ),
+)
+root = scan("/path/to/project", config)
+xml = generate_xml("project_name", root)
+```
+
+The returned `FileNode` is a slot-based dataclass with `name`, `rel_path`,
+`is_dir`, `children`, `content`, and a `walk()` iterator.
+
+## Output format
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <code>
     <project_context>
-        <project_name>sample_project</project_name>
-        <generation_timestamp>YYYY-MM-DD HH:MM:SS UTC</generation_timestamp>
+        <project_name>sample</project_name>
+        <generation_timestamp>2026-04-30 12:00:00 UTC</generation_timestamp>
     </project_context>
-    <structure_explanation>
-        This section represents the directory structure of the project.
-        It includes all UTF-8 encoded files that were not excluded based on the
-        unified configuration, which applies exclusions by name, extension,
-        or size, and directories by name.
-    </structure_explanation>
+    <structure_explanation>...</structure_explanation>
     <structure>
-        sample_project/
+        sample/
         ├── src/
-        │   ├── utils/
-        │   │   └── helper.py
         │   └── main.py
-        ├── docs/
-        │   └── README.md
-        └── config.json
+        └── README.md
     </structure>
-    <src>
-        <utils>
-            <helper_py>
-                def helper_function():
-                    return "This is a helper function"
-            </helper_py>
-        </utils>
-        <main_py>
-            def main():
-                print("Main function")
-        </main_py>
-    </src>
-    <docs>
+    <sample>
+        <src>
+            <main_py>
+                def main():
+                    print("hi")
+            </main_py>
+        </src>
         <README_md>
-            # Sample Project
-
-            This is a sample README file.
+                # sample
         </README_md>
-    </docs>
-    <config_json>
-{
-    "max_file_size_kb": 10000,
-    "exclude": {
-        "extensions": [".env", ".pyc", ".log", ".cache", ".tmp", ".pdf"],
-        "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
-        "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist", "node_modules"],
-        "max_depth": 20,
-        "max_files": 30
-    }
-}
-    </config_json>
-    <orphan_files>
-        <!-- Files extracted from content processing that did not appear in the structure -->
-        <example_file>
-            File content goes here...
-        </example_file>
-    </orphan_files>
+    </sample>
 </code>
+```
 
-## Configuration
-The configuration is unified. All exclusion settings—extensions, file names, directories, maximum depth, and maximum number of files—are contained in a single key named "exclude" within the configuration file. Additionally, the tool now validates the configuration to ensure that max_depth is never zero, and it employs internal optimizations (such as a single-pass file read for UTF‑8 verification and content extraction, and a per-branch file counter) to improve performance.
+Special characters in source content (`<`, `>`, `&`) are XML-escaped, so the
+document is always re-parseable.
 
-By default, the tool reads from config.json. You can override this behavior by specifying a custom configuration file with the --config parameter.
+## Development
 
-Example configuration (config.json):
-{
-  "max_file_size_kb": 10000,
-  "exclude": {
-    "extensions": [".env", ".pyc", ".log", ".cache", ".tmp", ".pdf"],
-    "files": ["LICENSE", ".gitignore", "poetry.lock", "package-lock.json", "requirements.txt"],
-    "directories": ["__pycache__", ".git", "venv", ".pytest_cache", "tests", "dist", "node_modules"],
-    "max_depth": 20,
-    "max_files": 30
-  }
-}
+```bash
+pip install -e ".[dev]"
+pytest                # run the test suite
+ruff check src tests  # lint
+```
+
+The repository ships with one default `config.json` for general use and a
+focused test suite covering configuration loading, scanning, XML generation,
+inspect mode, the CLI, and an integration test.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
